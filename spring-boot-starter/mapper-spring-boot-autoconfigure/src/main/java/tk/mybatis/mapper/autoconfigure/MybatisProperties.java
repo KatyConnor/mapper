@@ -42,11 +42,13 @@ public class MybatisProperties {
 
   /**
    * Location of MyBatis xml config file.
+   * mybatis 配置文件 mybatis_config.xml
    */
   private String configLocation;
 
   /**
    * Locations of MyBatis mapper files.
+   * mapper 文件
    */
   private String[] mapperLocations;
 

@@ -24,6 +24,7 @@
 
 package tk.mybatis.mapper.mapperhelper;
 
+import com.alibaba.fastjson.JSONObject;
 import org.apache.ibatis.annotations.DeleteProvider;
 import org.apache.ibatis.annotations.InsertProvider;
 import org.apache.ibatis.annotations.SelectProvider;
@@ -32,6 +33,7 @@ import org.apache.ibatis.builder.annotation.ProviderSqlSource;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.session.Configuration;
 import tk.mybatis.mapper.MapperException;
+import tk.mybatis.mapper.annotation.MapperSql;
 import tk.mybatis.mapper.annotation.RegisterMapper;
 import tk.mybatis.mapper.entity.Config;
 import tk.mybatis.mapper.mapperhelper.resolve.EntityResolve;
@@ -85,13 +87,14 @@ public class MapperHelper {
     }
 
     /**
-     * 通过通用Mapper接口获取对应的MapperTemplate
+     * 通过通用Mapper接口获取对应的MapperTemplate，在此处就可以实现通用mapper的sql拼装
      *
      * @param mapperClass
      * @return
      * @throws Exception
      */
     private MapperTemplate fromMapperClass(Class<?> mapperClass) {
+        // 获取接口方法
         Method[] methods = mapperClass.getDeclaredMethods();
         Class<?> templateClass = null;
         Class<?> tempClass = null;
@@ -141,14 +144,74 @@ public class MapperHelper {
     }
 
     /**
+     * 注册方法 add by mingliang 2018-03-27
+     * @param mapperClass
+     * @return
+     */
+    private MapperTemplate fromMapperObject(Class<?> mapperClass){
+        // 获取mapper的类注解，关联sql
+        System.out.println("--- 获取MapperSql注解的类 --- "+mapperClass);
+        MapperSql mapperSql = mapperClass.getAnnotation(MapperSql.class);
+        if (null == mapperSql){
+            return null;
+        }
+
+        Map<String,Method> methodMap = new HashMap<>();
+        Class<?> templateClass = mapperSql.type();
+        MapperTemplate mapperTemplate = null;
+
+        if (templateClass == null || !MapperTemplate.class.isAssignableFrom(templateClass)) {
+            templateClass = EmptyProvider.class;
+        }
+
+        System.out.println("--- 获取templateClass注解的类 --- "+templateClass);
+
+        try {
+            mapperTemplate = (MapperTemplate) templateClass.getConstructor(Class.class, MapperHelper.class).newInstance(mapperClass, this);
+            System.out.println("--- 获取mapperTemplate注解的类 --- "+mapperTemplate);
+        } catch (Exception e) {
+            throw new MapperException("实例化MapperTemplate对象失败:" + e.getMessage());
+        }
+
+        Method[] mapperMethods = mapperClass.getDeclaredMethods();
+        for (Method method : mapperMethods){
+            methodMap.put(method.getName(),method);
+            System.out.println("--- 注册mapper方法 --- "+method.getName());
+        }
+
+        // 注册代理执行方法
+        try {
+            mapperTemplate.addMethodMap("setSqlNode", templateClass.getMethod("setSqlNode",MappedStatement.class,String.class));
+//            mapperTemplate.addmapperSqlMethodMap("setSqlNode",templateClass.getMethod("setSqlNode",MappedStatement.class,String.class));
+            System.out.println("--- 注册templateClass代理类方法 setSqlNode --- ");
+        } catch (NoSuchMethodException e) {
+            throw new MapperException(templateClass.getCanonicalName() + "中缺少 setSqlNode 方法!");
+        }
+
+        //注册方法,注册mapper方法
+        for (Map.Entry methodName : methodMap.entrySet()) {
+            mapperTemplate.addMethodMap(methodName.getKey().toString(), (Method) methodName.getValue());
+        }
+        System.out.println("执行完毕，返回 mapperTemplate"+mapperTemplate);
+        return mapperTemplate;
+    }
+
+
+    /**
      * 注册通用Mapper接口
      *
      * @param mapperClass
      */
     public void registerMapper(Class<?> mapperClass) {
         if (!registerMapper.containsKey(mapperClass)) {
+            MapperTemplate template = fromMapperObject(mapperClass);
+            if (null != template){
+                registerMapper.put(mapperClass, template);
+            }else {
+                registerMapper.put(mapperClass, fromMapperClass(mapperClass));
+            }
             registerClass.add(mapperClass);
-            registerMapper.put(mapperClass, fromMapperClass(mapperClass));
+
         }
         //自动注册继承的接口
         Class<?>[] interfaces = mapperClass.getInterfaces();
@@ -277,8 +340,10 @@ public class MapperHelper {
             prefix = "";
         }
         for (Object object : new ArrayList<Object>(configuration.getMappedStatements())) {
+            System.out.println("mapperFactoryBean中添加MappedStatement --- [ "+object.toString()+" ]");
             if (object instanceof MappedStatement) {
                 MappedStatement ms = (MappedStatement) object;
+                System.out.println("mapperFactoryBean中添加MappedStatement 1212 --- [ "+ms.getSqlSource()+" ]");
                 if (ms.getId().startsWith(prefix)) {
                     processMappedStatement(ms);
                 }
@@ -293,6 +358,7 @@ public class MapperHelper {
      */
     public void processMappedStatement(MappedStatement ms){
         MapperTemplate mapperTemplate = isMapperMethod(ms.getId());
+        System.out.println("MappedStatement == "+ms.getId()+"，mapperTemplate = "+mapperTemplate);
         if(mapperTemplate != null && ms.getSqlSource() instanceof ProviderSqlSource) {
             setSqlSource(ms, mapperTemplate);
         }
@@ -314,6 +380,7 @@ public class MapperHelper {
      */
     public void setConfig(Config config) {
         this.config = config;
+        System.out.println("设置通用mapper！config = "+JSONObject.toJSONString(config));
         if(config.getResolveClass() != null){
             try {
                 EntityHelper.setResolve(config.getResolveClass().newInstance());
@@ -324,6 +391,7 @@ public class MapperHelper {
         }
         if(config.getMappers() != null && config.getMappers().size() > 0){
             for (Class mapperClass : config.getMappers()) {
+                System.out.println("设置通用mapper！mapperClass = "+mapperClass);
                 registerMapper(mapperClass);
             }
         }

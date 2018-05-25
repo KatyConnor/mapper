@@ -28,10 +28,10 @@
     <parent>
         <groupId>tk.mybatis</groupId>
         <artifactId>mapper-parent</artifactId>
-        <version>1</version>
+        <version>1-SNAPSHOT</version>
     </parent>
     <artifactId>mapper-all</artifactId>
-    <version>4.0.0-beta</version>
+    <version>4.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>mapper-all</name>

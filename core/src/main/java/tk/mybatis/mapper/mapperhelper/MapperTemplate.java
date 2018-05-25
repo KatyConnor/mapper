@@ -33,6 +33,7 @@ import org.apache.ibatis.scripting.xmltags.DynamicSqlSource;
 import org.apache.ibatis.scripting.xmltags.SqlNode;
 import org.apache.ibatis.scripting.xmltags.XMLLanguageDriver;
 import tk.mybatis.mapper.MapperException;
+import tk.mybatis.mapper.annotation.MapperSql;
 import tk.mybatis.mapper.entity.Config;
 import tk.mybatis.mapper.entity.EntityColumn;
 import tk.mybatis.mapper.entity.EntityTable;
@@ -59,7 +60,8 @@ import static tk.mybatis.mapper.util.MsUtil.getMethodName;
  */
 public abstract class MapperTemplate {
     private static final XMLLanguageDriver languageDriver = new XMLLanguageDriver();
-    protected Map<String, Method> methodMap = new ConcurrentHashMap<String, Method>();
+    protected Map<String, Method> methodMap = new ConcurrentHashMap<>();
+    protected Map<String, Method> mapperSqlMethodMap = new ConcurrentHashMap<>();
     protected Map<String, Class<?>> entityClassMap = new ConcurrentHashMap<String, Class<?>>();
     protected Class<?> mapperClass;
     protected MapperHelper mapperHelper;
@@ -87,6 +89,16 @@ public abstract class MapperTemplate {
      */
     public void addMethodMap(String methodName, Method method) {
         methodMap.put(methodName, method);
+    }
+
+    /**
+     * 添加映射方法
+     *
+     * @param methodName
+     * @param method
+     */
+    public void addmapperSqlMethodMap(String methodName, Method method) {
+        mapperSqlMethodMap.put(methodName, method);
     }
 
 	/**
@@ -233,7 +245,7 @@ public abstract class MapperTemplate {
     }
 
     /**
-     * 重新设置SqlSource
+     * 重新设置SqlSource,采用代理执行
      *
      * @param ms
      * @throws java.lang.reflect.InvocationTargetException
@@ -243,21 +255,39 @@ public abstract class MapperTemplate {
         if (this.mapperClass == getMapperClass(ms.getId())) {
             throw new MapperException("请不要配置或扫描通用Mapper接口类：" + this.mapperClass);
         }
-        Method method = methodMap.get(getMethodName(ms));
+        String methodName = getMethodName(ms);
+        System.out.println(methodName);
+        Method method = methodMap.get(methodName);
+        MapperSql mapperSql =  mapperClass.getAnnotation(MapperSql.class);
+        Method mapperSqlMethod = mapperSqlMethodMap.get(methodName);
         try {
             //第一种，直接操作ms，不需要返回值
             if (method.getReturnType() == Void.TYPE) {
-                method.invoke(this, ms);
+                if(null != mapperSql){
+                    mapperSqlMethod.invoke(this, ms,methodName);
+                }else {
+                    method.invoke(this, ms);
+                }
             }
             //第二种，返回SqlNode
             else if (SqlNode.class.isAssignableFrom(method.getReturnType())) {
-                SqlNode sqlNode = (SqlNode) method.invoke(this, ms);
+                SqlNode sqlNode = null;
+                if(null != mapperSql){
+                    sqlNode = (SqlNode) mapperSqlMethod.invoke(this, ms,methodName);
+                }else {
+                    sqlNode = (SqlNode) method.invoke(this, ms);
+                }
                 DynamicSqlSource dynamicSqlSource = new DynamicSqlSource(ms.getConfiguration(), sqlNode);
                 setSqlSource(ms, dynamicSqlSource);
             }
             //第三种，返回xml形式的sql字符串
             else if (String.class.equals(method.getReturnType())) {
-                String xmlSql = (String) method.invoke(this, ms);
+                String xmlSql = null;
+                if(null != mapperSql){
+                    xmlSql = (String) mapperSqlMethod.invoke(this, ms,methodName);
+                }else {
+                    xmlSql = (String) method.invoke(this, ms);
+                }
                 SqlSource sqlSource = createSqlSource(ms, xmlSql);
                 //替换原有的SqlSource
                 setSqlSource(ms, sqlSource);

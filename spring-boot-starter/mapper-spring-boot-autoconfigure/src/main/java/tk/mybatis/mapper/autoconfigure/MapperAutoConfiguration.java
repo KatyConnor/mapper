@@ -53,6 +53,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
+import tk.mybatis.spring.annotation.MapperSqlRegistrar;
 import tk.mybatis.spring.mapper.ClassPathMapperScanner;
 
 import javax.annotation.PostConstruct;

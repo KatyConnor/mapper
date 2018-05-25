@@ -29,7 +29,7 @@
     <parent>
         <groupId>tk.mybatis</groupId>
         <artifactId>mapper-parent</artifactId>
-        <version>1</version>
+        <version>1-SNAPSHOT</version>
     </parent>
     <artifactId>mapper-spring-boot</artifactId>
     <version>2.0.0-SNAPSHOT</version>
@@ -49,7 +49,7 @@
         <mapper-core.version>1.0.0-SNAPSHOT</mapper-core.version>
         <mapper-base.version>1.0.0-SNAPSHOT</mapper-base.version>
         <mapper-spring.version>1.0.0-SNAPSHOT</mapper-spring.version>
-        <mybatis.version>3.4.5</mybatis.version>
+        <mybatis.version>3.5.0-SNAPSHOT</mybatis.version>
         <mybatis-spring.version>1.3.1</mybatis-spring.version>
         <spring-boot.version>1.5.9.RELEASE</spring-boot.version>
     </properties>

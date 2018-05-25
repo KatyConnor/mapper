@@ -79,7 +79,7 @@ public class MapperPlugin extends FalseMethodPlugin {
     @Override
     public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         //获取实体类
-        FullyQualifiedJavaType entityType = new FullyQualifiedJavaType(introspectedTable.getBaseRecordType());
+        FullyQualifiedJavaType entityType = new FullyQualifiedJavaType(introspectedTable.getBaseRecordType(),introspectedTable.getBaseParamType());
         //import接口
         for (String mapper : mappers) {
             interfaze.addImportedType(new FullyQualifiedJavaType(mapper));
@@ -107,8 +107,9 @@ public class MapperPlugin extends FalseMethodPlugin {
                     + context.getEndingDelimiter();
         }
         //是否忽略大小写，对于区分大小写的数据库，会有用
+        // modyfy 去掉数据库名 明亮 2018-3-30
         if (caseSensitive && !topLevelClass.getType().getShortName().equals(tableName)) {
-            topLevelClass.addAnnotation("@Table(name = \"" + getDelimiterName(tableName) + "\")");
+            topLevelClass.addAnnotation("@Table(name = \"" + getDelimiterName(tableName.split("\\.")[2]) + "\")");
         } else if (!topLevelClass.getType().getShortName().equalsIgnoreCase(tableName)) {
             topLevelClass.addAnnotation("@Table(name = \"" + getDelimiterName(tableName) + "\")");
         } else if (StringUtility.stringHasValue(schema)

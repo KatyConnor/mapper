@@ -45,26 +45,32 @@
         <dependency>
             <groupId>org.mybatis</groupId>
             <artifactId>mybatis</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.mybatis</groupId>
             <artifactId>mybatis-spring</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>tk.mybatis</groupId>
             <artifactId>mapper-core</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>tk.mybatis</groupId>
             <artifactId>mapper-base</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>tk.mybatis</groupId>
             <artifactId>mapper-spring</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>tk.mybatis</groupId>
             <artifactId>mapper-spring-boot-autoconfigure</artifactId>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 </project>

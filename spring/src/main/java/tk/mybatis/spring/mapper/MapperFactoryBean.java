@@ -15,6 +15,7 @@
  */
 package tk.mybatis.spring.mapper;
 
+import com.alibaba.fastjson.JSONObject;
 import org.apache.ibatis.executor.ErrorContext;
 import org.apache.ibatis.session.Configuration;
 import org.mybatis.spring.SqlSessionTemplate;
@@ -76,7 +77,7 @@ public class MapperFactoryBean<T> extends SqlSessionDaoSupport implements Factor
         super.checkDaoConfig();
 
         notNull(this.mapperInterface, "Property 'mapperInterface' is required");
-
+        System.out.println("mapperFactoryBean中添加MappedStatement ---");
         Configuration configuration = getSqlSession().getConfiguration();
         if (this.addToConfig && !configuration.hasMapper(this.mapperInterface)) {
             try {

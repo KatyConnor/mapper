@@ -21,10 +21,7 @@ import org.springframework.beans.PropertyValue;
 import org.springframework.beans.PropertyValues;
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.config.PropertyResourceConfigurer;
-import org.springframework.beans.factory.config.TypedStringValue;
+import org.springframework.beans.factory.config.*;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
 import org.springframework.beans.factory.support.BeanNameGenerator;
@@ -33,10 +30,12 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.util.StringUtils;
+import tk.mybatis.mapper.annotation.MapperSql;
 import tk.mybatis.mapper.common.Marker;
 import tk.mybatis.mapper.mapperhelper.MapperHelper;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -171,6 +170,29 @@ public class MapperScannerConfigurer implements BeanDefinitionRegistryPostProces
         //设置通用 Mapper
         scanner.setMapperHelper(this.mapperHelper);
         scanner.scan(StringUtils.tokenizeToStringArray(this.basePackage, ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS));
+
+        String[] beanDefinitionNames = registry.getBeanDefinitionNames();
+        for (String name : beanDefinitionNames){
+            BeanDefinition beanDefinition = registry.getBeanDefinition(name);
+            List<ConstructorArgumentValues.ValueHolder> list = beanDefinition.getConstructorArgumentValues().getGenericArgumentValues();
+            if (null == list || list.size() <= 0){
+                continue;
+            }
+            String className = String.valueOf(list.get(0).getValue());
+            if (null != className && className.startsWith(basePackage)){
+                try {
+                    Class cls = Class.forName(className);
+                    // 查找类是否Mapper注解
+                    MapperSql mapperSql = (MapperSql) cls.getAnnotation(MapperSql.class);
+                    if (mapperSql != null){
+                        this.mapperHelper.registerMapper(cls);
+                    }
+                    System.out.println("----------------====-------------,"+cls);
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     /*
@@ -309,6 +331,7 @@ public class MapperScannerConfigurer implements BeanDefinitionRegistryPostProces
      * @param superClass parent class
      */
     public void setMarkerInterface(Class<?> superClass) {
+        System.out.println("注解设置通用mapper！superClass = "+superClass);
         this.markerInterface = superClass;
         if (Marker.class.isAssignableFrom(superClass)) {
             mapperHelper.registerMapper(superClass);

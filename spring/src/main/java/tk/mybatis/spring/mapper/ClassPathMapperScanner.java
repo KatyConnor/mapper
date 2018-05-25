@@ -21,6 +21,7 @@ import org.mybatis.spring.mapper.MapperScannerConfigurer;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
+import org.springframework.beans.factory.config.ConstructorArgumentValues;
 import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -34,12 +35,14 @@ import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.util.StringUtils;
 import tk.mybatis.mapper.MapperException;
+import tk.mybatis.mapper.annotation.MapperSql;
 import tk.mybatis.mapper.entity.Config;
 import tk.mybatis.mapper.mapperhelper.MapperHelper;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
@@ -78,6 +81,7 @@ public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
 
     private String mapperHelperBeanName;
 
+    // 创建mapper
     private MapperFactoryBean<?> mapperFactoryBean = new MapperFactoryBean<Object>();
 
     public ClassPathMapperScanner(BeanDefinitionRegistry registry) {
@@ -144,6 +148,28 @@ public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
             processBeanDefinitions(beanDefinitions);
         }
 
+        for (BeanDefinitionHolder beanDefinitionHolder : beanDefinitions){
+            BeanDefinition beanDefinition =  beanDefinitionHolder.getBeanDefinition();
+            List<ConstructorArgumentValues.ValueHolder> list = beanDefinition.getConstructorArgumentValues().getGenericArgumentValues();
+            if (null == list || list.size() <= 0){
+                continue;
+            }
+            String className = String.valueOf(list.get(0).getValue());
+            if (null != className && className.startsWith(basePackages[0])){
+                try {
+                    Class cls = Class.forName(className);
+                    // 查找类是否Mapper注解
+                    System.out.println("设置mapper ---- === {}"+ className);
+                    MapperSql mapperSql = (MapperSql) cls.getAnnotation(MapperSql.class);
+                    if (mapperSql != null){
+                        this.mapperHelper.registerMapper(cls);
+                    }
+                    System.out.println("----------------====-------------,"+cls);
+                } catch (ClassNotFoundException e) {
+                    logger.error("e = {}",e);
+                }
+            }
+        }
         return beanDefinitions;
     }
 

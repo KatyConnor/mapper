@@ -58,7 +58,13 @@ public class TableColumnBuilder {
         tableClass.setLowerCaseName(type.getShortName().toLowerCase());
         tableClass.setShortClassName(type.getShortName());
         tableClass.setFullClassName(type.getFullyQualifiedName());
-        tableClass.setPackageName(type.getPackageName());
+        StringBuilder packages = type.getPackageName();
+        String[] pakageNameList = packages.toString().split(";");
+        StringBuffer stringBuffer = new StringBuffer();
+        for (String str : pakageNameList){
+            stringBuffer.append(str).append(";");
+        }
+        tableClass.setPackageName(stringBuffer.toString());
 
         List<ColumnField> pkFields = new ArrayList<ColumnField>();
         List<ColumnField> baseFields = new ArrayList<ColumnField>();
@@ -104,7 +110,13 @@ public class TableColumnBuilder {
         field.setRemarks(column.getRemarks());
         FullyQualifiedJavaType type = column.getFullyQualifiedJavaType();
         field.setType(type);
-        field.setTypePackage(type.getPackageName());
+        StringBuilder packages = type.getPackageName();
+        String[] pakageNameList = packages.toString().split(";");
+        StringBuffer stringBuffer = new StringBuffer();
+        for (String str : pakageNameList){
+            stringBuffer.append(str).append(";");
+        }
+        field.setTypePackage(stringBuffer.toString());
         field.setShortTypeName(type.getShortName());
         field.setFullTypeName(type.getFullyQualifiedName());
         field.setIdentity(column.isIdentity());

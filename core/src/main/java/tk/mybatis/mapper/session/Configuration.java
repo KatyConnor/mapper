@@ -1,5 +1,6 @@
 package tk.mybatis.mapper.session;
 
+import com.alibaba.fastjson.JSONObject;
 import org.apache.ibatis.mapping.MappedStatement;
 import tk.mybatis.mapper.entity.Config;
 import tk.mybatis.mapper.mapperhelper.MapperHelper;
@@ -50,6 +51,7 @@ public class Configuration extends org.apache.ibatis.session.Configuration {
 
     @Override
     public void addMappedStatement(MappedStatement ms) {
+        System.out.println("configuration中添加MappedStatement = 【"+JSONObject.toJSONString(ms)+"】");
         try {
             super.addMappedStatement(ms);
             //没有任何配置时，使用默认配置
