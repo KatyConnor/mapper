@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # MyBatis 通用 Mapper4
 
 [![Build Status](https://travis-ci.org/abel533/Mapper.svg?branch=master)](https://travis-ci.org/abel533/Mapper)
@@ -63,3 +64,7 @@ Mapper 4 改动很大，正式发布前会提供详细的更新日志。
 - CSDN博客：http://blog.csdn.net/isea533/article/details/73555400
 
 - GitHub项目：https://github.com/mybatis-book/book
+
+#### 我添加部分
+# mapper
+通用mapper源码，功能扩展时修改部分源码  mygithub-origin/master
